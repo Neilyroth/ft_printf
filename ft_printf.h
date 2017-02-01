@@ -6,28 +6,35 @@
 /*   By: nterrier <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2017/01/23 16:44:35 by nterrier          #+#    #+#             */
-/*   Updated: 2017/01/28 17:29:52 by nterrier         ###   ########.fr       */
+/*   Updated: 2017/02/01 22:35:09 by nterrier         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef FT_PRINTF_H
 # define FT_PRINTF_H
 
-# include <stdio.h> //printf
+# define LONG			flags->l_long
+# define TOTAL 			flags->total
+# define UPPER			(32 * flags->uppercase)
+# define COLOR(s,n)		ft_putstr(s), (format += n)
+# define MSG_DIE(a,c,b)	ft_putstr(a), ft_putchar(c), ft_putendl(b), exit(TOTAL)
 
-# include <stdarg.h> //fonction variadiques
-# include <stdlib.h> //malloc, free, exit
-# include <unistd.h> //write
-# include <locale.h> //definir la locale pour les wchar
-# include <wchar.h> //%lc
+# include <stdarg.h>
+# include <stdlib.h>
+# include <unistd.h>
+
+# include <locale.h>
+# include <errno.h>
+# include <string.h>
 
 # include "libft/libft.h"
 
-typedef struct s_flags
+typedef struct	s_flags
 {
+	int total;
 	int printed;
 
-	int a_sharp;
+	int prefix;
 	int a_zero;
 	int a_minus;
 	int a_plus;
@@ -43,36 +50,36 @@ typedef struct s_flags
 
 	int uppercase;
 	int apply_precision;
-}		t_flags;
+}				t_flags;
 
+int				ft_printf(char *format, ...);
+char			*percent(char *format, va_list ap, t_flags *flags);
+void			new_flags(t_flags *flags);
 
+char			*search_flags(char *format, t_flags *flags);
+char			*attributes(char *format, t_flags *flags);
+char			*field_width(char *format, t_flags *flags);
+char			*precision(char *format, t_flags *flags);
+char			*length_modifier(char *format, t_flags *flags);
 
-void	msg_die(char *message);
+void			adjust_length(int nb_spaces, int on, char c);
+int				bigest(int a, int b);
+int				smallest(int a, int b);
+char			*color(char *format, t_flags *flags);
+void			stock_total(va_list ap, int total);
 
-int		ft_printf(char *format, ...);
-char	*percent(char *format, va_list ap, t_flags *flags);
-void	new_flags(t_flags *flags);
-void	print_flags(t_flags *flags);
-char	*color(char *format);
+int				nbr_base(int base, va_list ap, t_flags *flags);
+int				adress(va_list ap, t_flags *flags);
+char			*itoa_base_printf(uintmax_t d, int b, t_flags *flags);
 
-char	*search_flags(char *format, t_flags *flags);
-char	*attributes(char *format, t_flags *flags);
-char	*field_width(char *format, t_flags *flags);
-char	*precision(char *format, t_flags *flags);
-char	*length_modifier(char *format, t_flags *flags);
+int				number(va_list ap, t_flags *flags);
+void			itoa_core(uintmax_t tmp, int base, char *str, t_flags *flags);
+char			*itoa_printf(intmax_t d, t_flags *flags);
 
-void	adjust_length(int nb_spaces, int on);
+int				string(va_list ap, t_flags *flags);
+int				m_error(void);
 
-
-void	string(va_list ap, t_flags *flags);
-
-int		number(va_list ap, t_flags *flags);
-char	*itoa_printf(va_list ap, t_flags *flags);
-
-void	pointer(va_list ap, t_flags *flags);
-
-void	character(va_list ap, t_flags *flags);
-int		ft_putwchar(unsigned wchar);
-
-void	nbr_base(int base, va_list ap, t_flags *flags);
+int				character(va_list ap, t_flags *flags);
+int				percent_char(t_flags *flags);
+int				ft_putwchar(unsigned wchar);
 #endif

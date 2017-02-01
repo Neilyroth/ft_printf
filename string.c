@@ -6,35 +6,73 @@
 /*   By: nterrier <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2017/01/24 19:31:22 by nterrier          #+#    #+#             */
-/*   Updated: 2017/01/28 17:58:42 by nterrier         ###   ########.fr       */
+/*   Updated: 2017/02/01 22:30:28 by nterrier         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ft_printf.h"
 
-void	string(va_list ap, t_flags *flags)
-{// - 30 .10 l
-	char	*str;
-	int		nb_spaces;
+static size_t	wcharlen(unsigned c)
+{
+	if (c < 0x80)
+		return (1);
+	else if (c < 0x800)
+		return (2);
+	else if (c < 0x10000)
+		return (3);
+	return (4);
+}
 
-	str = va_arg(ap, char*);
+static size_t	ft_wstrlen(unsigned *str, int wide)
+{
+	size_t len;
 
-
-
-	if (!flags->apply_precision)
-		flags->precision = ft_strlen(str); //ne marche pas avec les long !!
-	nb_spaces = flags->min_length - ((flags->precision < (int)ft_strlen(str)) ? flags->precision : ft_strlen(str));
-
-	adjust_length(nb_spaces, !flags->a_minus);
-	while (*str && flags->precision)
+	len = 0;
+	while (*str != L'\0')
 	{
-		//if (flags->l_long)
-		//	ft_putwchar((unsigned)*str);
-		//else
-			ft_putchar(*str);
-		flags->precision--;
+		if (wide)
+			len += wcharlen(*str);
+		else
+			len++;
 		str++;
 	}
-	adjust_length(nb_spaces, flags->a_minus);
-	return ;
+	return (len);
+}
+
+int				string(va_list ap, t_flags *flags)
+{
+	unsigned	*str;
+	int			nb_spaces;
+	int			str_len;
+	int			str_len_wide;
+
+	str = va_arg(ap, unsigned*);
+	if (str == NULL)
+	{
+		ft_putstr("(null)");
+		return (6);
+	}
+	str_len = (int)((LONG) ? ft_wstrlen(str, 0) : ft_strlen((char*)str));
+	str_len_wide = (int)((LONG) ? ft_wstrlen(str, 1) : str_len);
+	(!flags->apply_precision) ? flags->precision = str_len_wide : 0;
+	nb_spaces = flags->min_length - smallest(flags->precision, str_len_wide);
+	adjust_length(nb_spaces, !flags->a_minus, ' ');
+	while ((char)*str && flags->precision >= ((LONG) ? (int)wcharlen(*str) : 1))
+	{
+		(LONG) ? ft_putwchar(*str) : ft_putchar((char)(*str));
+		flags->precision -= (LONG) ? wcharlen(*str) : 1;
+		flags->printed += (LONG) ? wcharlen(*str) : 1;
+		str = (LONG) ? str + 1 : (unsigned *)((char*)str + 1);
+	}
+	adjust_length(nb_spaces, flags->a_minus, ' ');
+	return (flags->printed + bigest(nb_spaces, 0));
+}
+
+int				m_error(void)
+{
+	char	*str;
+
+	str = strerror(errno);
+	ft_putstr(str);
+	return ((int)ft_strlen(str));
 }
